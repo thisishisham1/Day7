@@ -1,4 +1,4 @@
-package klivvr.test.day7
+package klivvr.test.day7.presentation
 
 import android.content.Context
 import android.os.Bundle
@@ -9,14 +9,23 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import klivvr.test.day7.R
+import klivvr.test.day7.data.local.dao.Dao
+import klivvr.test.day7.data.local.database.DataBase
+import klivvr.test.day7.viewModel.MainViewModel
+import klivvr.test.day7.viewModel.MainViewModelFactory
 
 const val SHARED_PREF = "Day7"
 const val PHONE = "phone"
 const val MESSAGE = "message"
 
 class FragmentOne : Fragment() {
-
+    private lateinit var dao : Dao
+    val vm :MainViewModel by viewModels(
+        factoryProducer = { MainViewModelFactory(dao) }
+    )
     private val sharedPreferences by lazy {
         context?.getSharedPreferences(
             SHARED_PREF,
@@ -24,10 +33,13 @@ class FragmentOne : Fragment() {
         )
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        dao = DataBase.getDatabase(requireContext()).dao()
+        super.onCreate(savedInstanceState)
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+        savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_one, container, false)
     }
 
@@ -46,6 +58,7 @@ class FragmentOne : Fragment() {
             if (phone.isBlank() || message.isBlank()) {
                 Toast.makeText(context, "One of the fields is empty", Toast.LENGTH_SHORT).show()
             } else {
+                vm.insertData(phone, message)
                 saveData(phone, message)
                 findNavController().navigate(
                     FragmentOneDirections.actionFragmentOneToFragmentTwo()
